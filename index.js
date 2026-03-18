@@ -68,11 +68,26 @@ wss.on('connection', (ws) => {
             ws.send(
                 JSON.stringify({
                     type: "tunnel_created",
-                    tunnelId
+                    tunnelId,
+                    expiry: Date.now() + 30 * 60 * 1000 // 30 minutes
                 })
             )
 
             console.log(`Tunnel created with ID: ${tunnelId}`);
+
+            setTimeout(() => {
+                if(activeTunnels[tunnelId]) {
+                    console.log(`Tunnel expired: ${tunnelId}`);
+
+                    ws.send(JSON.stringify({
+                        type: "tunnel_expired"
+                    }));
+
+                    ws.close();
+
+                    delete activeTunnels[tunnelId];
+                }
+            }, 30 * 60 * 1000); // Expire after 30 minutes
         }
         else if(data.type === "response") {
             const res = pendingRequests[data.requestId];
@@ -83,7 +98,7 @@ wss.on('connection', (ws) => {
                 delete pendingRequests[data.requestId];
             }
         }
-    })
+    });
 
     ws.on("close", () => {
 
