@@ -1,6 +1,7 @@
 const express = require('express');
 const { WebSocketServer } = require('ws');
 const { v4: uuidv4 } = require('uuid');
+const { uniqueNamesGenerator, adjectives, animals } = require('unique-names-generator');
 
 
 const PORT = process.env.PORT || 8080;
@@ -51,7 +52,16 @@ wss.on('connection', (ws) => {
         const data = JSON.parse(message);
 
         if(data.type === "register") {
-            const tunnelId = uuidv4().slice(0, 6);
+
+            const randomName = uniqueNamesGenerator({
+                dictionaries: [adjectives, animals],
+                separator: '-',
+                length: 2
+            })
+
+            const suffix = Math.random().toString(16).slice(2, 6);
+
+            const tunnelId = `${randomName}-${suffix}`;
 
             activeTunnels[tunnelId] = ws;
 
